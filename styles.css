@@ -7,9 +7,9 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--color-background);
     min-height: 100vh;
-    color: #333;
+    color: var(--color-foreground);
     line-height: 1.6;
 }
 
@@ -113,22 +113,7 @@ body.container {
   margin-bottom: 1rem;
 }
 
-.volume-control {
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.volume-label {
-  font-size: 1rem;
-}
-.volume-slider {
-  flex: 1;
-}
-.volume-value {
-  min-width: 40px;
-  text-align: right;
-}
+
 
 .progress-container {
   margin-bottom: 1rem;
@@ -136,7 +121,7 @@ body.container {
 .progress-bar {
   width: 100%;
   height: 8px;
-  background: #eee;
+  background: #555;
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 0.25rem;
@@ -207,9 +192,9 @@ body.container {
   width: 100%;
   max-width: 300px;
   height: 150px;
-  background: #f8f8f8;
+  background: #3a3a3a;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #ffffff;
 }
 
 .footer {
@@ -221,7 +206,7 @@ body.container {
 }
 .tech-info {
   font-size: 0.95rem;
-  color: #666;
+  color: #cccccc;
 }
 
 /* Remove all colored gradients and backgrounds, use only black, white, or grayscale */
@@ -592,7 +577,7 @@ body.container {
 }
 
 .tech-info p {
-    color: #666;
+    color: #cccccc;
     font-size: 0.9rem;
     font-style: italic;
 }

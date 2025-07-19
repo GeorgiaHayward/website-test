@@ -1,12 +1,12 @@
 :root {
   /* Colors */
-  --color-background: #FFFFFF;
-  --color-foreground: #000000;
-  --color-primary: #000000;
-  --color-secondary: #FFFFFF;
-  --color-border: #000000;
-  --color-card-background: #FFFFFF;
-  --color-card-border: #000000;
+  --color-background: #2a2a2a;
+  --color-foreground: #ffffff;
+  --color-primary: #ffffff;
+  --color-secondary: #2a2a2a;
+  --color-border: #ffffff;
+  --color-card-background: #3a3a3a;
+  --color-card-border: #ffffff;
 
   /* Typography */
   --font-family: 'Poppins', 'Arial', sans-serif;
@@ -29,7 +29,7 @@
   --card-border-radius: 1rem;
   --card-border-width: 2px;
   --card-border-style: solid;
-  --card-border-color: #000000;
+  --card-border-color: #ffffff;
   --card-padding: 1rem;
   --card-margin: 1rem 0;
   --grid-columns: 2;
@@ -39,9 +39,9 @@
   /* Use icon font or SVGs for arrow/home icons as described in the design system */
 
   /* Buttons */
-  --button-background: #FFFFFF;
-  --button-color: #000000;
-  --button-border: 2px solid #000000;
+  --button-background: #3a3a3a;
+  --button-color: #ffffff;
+  --button-border: 2px solid #ffffff;
   --button-border-radius: 1rem;
   --button-padding: 0.75rem 1.5rem;
   --button-font-weight: bold;
@@ -49,5 +49,5 @@
 
   /* Effects */
   --effect-shadow: none;
-  --effect-hover-background: #F0F0F0;
+  --effect-hover-background: #4a4a4a;
 } 

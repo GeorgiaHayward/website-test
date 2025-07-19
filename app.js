@@ -12,17 +12,6 @@ class AmbisonicAudioApp {
             progressFill: document.getElementById('progressFill'),
             currentTime: document.getElementById('currentTime'),
             totalTime: document.getElementById('totalTime'),
-            enableOrientation: document.getElementById('enableOrientation'),
-            orientationStatus: document.getElementById('orientationStatus'),
-            orientationData: document.getElementById('orientationData'),
-            azimuth: document.getElementById('azimuth'),
-            elevation: document.getElementById('elevation'),
-            roll: document.getElementById('roll'),
-            azimuthSlider: document.getElementById('azimuthSlider'),
-            elevationSlider: document.getElementById('elevationSlider'),
-            azimuthValue: document.getElementById('azimuthValue'),
-            elevationValue: document.getElementById('elevationValue'),
-            audioInfo: document.getElementById('audioInfo'),
             fileName: document.getElementById('fileName'),
             duration: document.getElementById('duration'),
             sampleRate: document.getElementById('sampleRate')
@@ -166,10 +155,6 @@ class AmbisonicAudioApp {
         this.orientationHandler.onOrientationChange = (azimuth, elevation, roll) => {
             this.updateOrientation(azimuth, elevation, roll);
         };
-        
-        this.orientationHandler.onPermissionChange = (hasPermission) => {
-            this.updateOrientationStatus(hasPermission);
-        };
     }
     
     async togglePlayback() {
@@ -218,26 +203,6 @@ class AmbisonicAudioApp {
     updateOrientation(azimuth, elevation, roll) {
         // Update audio engine
         this.audioEngine.updateSpatialPosition(azimuth, elevation, roll);
-        
-        // Update UI
-        this.updateOrientationDisplay(azimuth, elevation, roll);
-    }
-    
-    updateOrientationDisplay(azimuth, elevation, roll) {
-        this.elements.azimuth.textContent = `${azimuth.toFixed(1)}°`;
-        this.elements.elevation.textContent = `${elevation.toFixed(1)}°`;
-        this.elements.roll.textContent = `${roll.toFixed(1)}°`;
-    }
-    
-    updateOrientationStatus(isEnabled) {
-        const statusElement = this.elements.orientationStatus.querySelector('.status-text');
-        if (isEnabled) {
-            statusElement.textContent = 'Orientation: Enabled';
-            statusElement.style.color = '#4CAF50';
-        } else {
-            statusElement.textContent = 'Orientation: Disabled';
-            statusElement.style.color = '#f44336';
-        }
     }
     
     updateProgress(currentTime, duration) {
