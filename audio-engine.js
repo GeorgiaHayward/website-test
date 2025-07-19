@@ -161,7 +161,7 @@ class AmbisonicAudioEngine {
     
     createFallbackTestTone() {
         try {
-            console.log('Creating fallback test tone...');
+            console.log('Creating enhanced fallback test tone...');
             
             // Create a 10-second ambisonic test tone
             const duration = 10;
@@ -172,33 +172,39 @@ class AmbisonicAudioEngine {
             this.audioBuffer = this.audioContext.createBuffer(4, length, sampleRate);
             this.duration = duration;
             
-            // Generate test tones for each channel
+            // Enhanced frequencies with more dramatic separation
+            const frequencies = [220, 440, 880, 1320]; // A3, A4, A5, E6 - more spread
+            const amplitudes = [0.4, 0.35, 0.3, 0.25]; // Different amplitudes per channel
+            
+            // Generate test tones for each channel with enhanced spatial characteristics
             for (let channel = 0; channel < 4; channel++) {
                 const channelData = this.audioBuffer.getChannelData(channel);
-                
-                // Different frequencies for each channel to create spatial separation
-                const frequencies = [440, 880, 1320, 1760]; // A4, A5, E6, A6
                 const frequency = frequencies[channel];
+                const amplitude = amplitudes[channel];
                 
                 for (let i = 0; i < length; i++) {
                     const time = i / sampleRate;
-                    const amplitude = 0.3; // Reduced amplitude for safety
                     
-                    // Create a tone with some variation
+                    // Base tone with enhanced amplitude
                     const tone = amplitude * Math.sin(2 * Math.PI * frequency * time);
                     
-                    // Add some harmonics for richer sound
-                    const harmonic1 = 0.1 * Math.sin(2 * Math.PI * frequency * 2 * time);
-                    const harmonic2 = 0.05 * Math.sin(2 * Math.PI * frequency * 3 * time);
+                    // Enhanced harmonics for richer spatial sound
+                    const harmonic1 = 0.15 * Math.sin(2 * Math.PI * frequency * 2 * time);
+                    const harmonic2 = 0.1 * Math.sin(2 * Math.PI * frequency * 3 * time);
+                    const harmonic3 = 0.05 * Math.sin(2 * Math.PI * frequency * 4 * time);
                     
-                    // Add some spatial movement
-                    const spatialMod = 0.1 * Math.sin(2 * Math.PI * 0.5 * time);
+                    // Enhanced spatial movement with different patterns per channel
+                    const spatialMod1 = 0.12 * Math.sin(2 * Math.PI * 0.3 * time + channel * Math.PI / 2);
+                    const spatialMod2 = 0.08 * Math.sin(2 * Math.PI * 0.7 * time + channel * Math.PI);
                     
-                    channelData[i] = tone + harmonic1 + harmonic2 + spatialMod;
+                    // Add channel-specific modulation for more dramatic separation
+                    const channelMod = 0.1 * Math.sin(2 * Math.PI * (0.2 + channel * 0.1) * time);
+                    
+                    channelData[i] = tone + harmonic1 + harmonic2 + harmonic3 + spatialMod1 + spatialMod2 + channelMod;
                 }
             }
             
-            console.log(`Fallback test tone created: ${this.audioBuffer.numberOfChannels} channels, ${sampleRate}Hz, ${duration.toFixed(2)}s`);
+            console.log(`Enhanced fallback test tone created: ${this.audioBuffer.numberOfChannels} channels, ${sampleRate}Hz, ${duration.toFixed(2)}s`);
             
             // Set up ambisonic processing
             this.setupAmbisonicDecoding();
@@ -209,7 +215,7 @@ class AmbisonicAudioEngine {
                 channels: this.audioBuffer.numberOfChannels
             };
         } catch (error) {
-            console.error('Failed to create fallback test tone:', error);
+            console.error('Failed to create enhanced fallback test tone:', error);
             throw error;
         }
     }
@@ -284,50 +290,65 @@ class AmbisonicAudioEngine {
         // Update rotation matrix
         this.rotationMatrix = this.createRotationMatrix(azimuth, elevation, roll);
         
-        // Convert spherical coordinates to Cartesian for the panner
+        // Enhanced spatial positioning with more dramatic effects
         const azRad = azimuth * Math.PI / 180;
         const elRad = elevation * Math.PI / 180;
         
-        // Calculate 3D position
-        const distance = 5; // Fixed distance from listener
+        // More dramatic distance variation based on orientation
+        const baseDistance = 3;
+        const distanceVariation = 2 * Math.sin(azRad * 2); // Creates more movement
+        const distance = baseDistance + distanceVariation;
+        
+        // Enhanced 3D position calculation with more dramatic movement
         const x = distance * Math.cos(elRad) * Math.sin(azRad);
-        const y = distance * Math.sin(elRad);
+        const y = distance * Math.sin(elRad) * 1.5; // Amplify elevation effect
         const z = distance * Math.cos(elRad) * Math.cos(azRad);
         
-        // Update panner position
+        // Update panner position with enhanced effects
         if (this.pannerNode) {
             if (this.pannerNode.positionX) {
-                // Modern browsers
-                this.pannerNode.positionX.value = x;
-                this.pannerNode.positionY.value = y;
-                this.pannerNode.positionZ.value = z;
+                // Modern browsers - more dramatic positioning
+                this.pannerNode.positionX.value = x * 1.5; // Amplify horizontal movement
+                this.pannerNode.positionY.value = y * 1.5; // Amplify vertical movement
+                this.pannerNode.positionZ.value = z * 1.5; // Amplify depth movement
+                
+                // Enhanced cone angles for more dramatic spatial effects
+                this.pannerNode.coneInnerAngle = 30; // Narrower inner cone
+                this.pannerNode.coneOuterAngle = 90; // Wider outer cone
+                this.pannerNode.coneOuterGain = 0.3; // More dramatic falloff
             } else {
                 // Fallback for older browsers
-                this.pannerNode.setPosition(x, y, z);
+                this.pannerNode.setPosition(x * 1.5, y * 1.5, z * 1.5);
             }
         }
         
-        // Update listener orientation for ambisonic content
+        // Enhanced listener orientation for more dramatic ambisonic effects
         if (this.audioContext.listener.forwardX) {
-            // Modern browsers
-            this.audioContext.listener.forwardX.value = Math.sin(azRad);
-            this.audioContext.listener.forwardY.value = Math.sin(elRad);
-            this.audioContext.listener.forwardZ.value = -Math.cos(azRad) * Math.cos(elRad);
+            // Modern browsers - more dramatic listener orientation
+            this.audioContext.listener.forwardX.value = Math.sin(azRad) * 1.2;
+            this.audioContext.listener.forwardY.value = Math.sin(elRad) * 1.2;
+            this.audioContext.listener.forwardZ.value = -Math.cos(azRad) * Math.cos(elRad) * 1.2;
             
-            // Update up vector based on roll
-            this.audioContext.listener.upX.value = Math.sin(roll * Math.PI / 180);
-            this.audioContext.listener.upY.value = Math.cos(roll * Math.PI / 180);
+            // Enhanced up vector based on roll with more dramatic effect
+            this.audioContext.listener.upX.value = Math.sin(roll * Math.PI / 180) * 1.5;
+            this.audioContext.listener.upY.value = Math.cos(roll * Math.PI / 180) * 1.5;
             this.audioContext.listener.upZ.value = 0;
         } else {
             // Fallback for older browsers
             this.audioContext.listener.setOrientation(
-                Math.sin(azRad),
-                Math.sin(elRad),
-                -Math.cos(azRad) * Math.cos(elRad),
-                Math.sin(roll * Math.PI / 180),
-                Math.cos(roll * Math.PI / 180),
+                Math.sin(azRad) * 1.2,
+                Math.sin(elRad) * 1.2,
+                -Math.cos(azRad) * Math.cos(elRad) * 1.2,
+                Math.sin(roll * Math.PI / 180) * 1.5,
+                Math.cos(roll * Math.PI / 180) * 1.5,
                 0
             );
+        }
+        
+        // Apply additional gain modulation based on orientation for more dramatic effect
+        if (this.gainNode) {
+            const orientationGain = 0.7 + 0.3 * Math.cos(azRad) * Math.cos(elRad);
+            this.gainNode.gain.value = Math.max(0.3, Math.min(1.0, orientationGain));
         }
     }
     
