@@ -49,11 +49,14 @@ class AmbisonicAudioApp {
             }
             
             // Initialize visualizer (if present)
-            if (document.getElementById('visualizer')) {
+            const visualizerElement = document.getElementById('visualizer');
+            if (visualizerElement) {
                 console.log('Initializing visualizer...');
                 this.visualizer = new AudioVisualizer('visualizer');
                 this.visualizer.setAudioEngine(this.audioEngine);
                 this.visualizer.setOrientationHandler(this.orientationHandler);
+            } else {
+                console.log('No visualizer element found, skipping visualizer initialization');
             }
             
             // Set up event listeners
@@ -106,9 +109,11 @@ class AmbisonicAudioApp {
             this.elements.playButton.innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">Play</span>';
             this.elements.stopButton.disabled = false;
             
-            // Start visualizer
-            console.log('loadDefaultAudio: Starting visualizer...');
-            this.visualizer.start();
+            // Start visualizer if available
+            if (this.visualizer) {
+                console.log('loadDefaultAudio: Starting visualizer...');
+                this.visualizer.start();
+            }
             
             this.hideLoading();
             console.log('loadDefaultAudio: Complete!');
@@ -137,7 +142,9 @@ class AmbisonicAudioApp {
         
         // Window resize
         window.addEventListener('resize', () => {
-            this.visualizer.resize();
+            if (this.visualizer) {
+                this.visualizer.resize();
+            }
         });
     }
     
