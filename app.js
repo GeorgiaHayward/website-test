@@ -8,13 +8,7 @@ class AmbisonicAudioApp {
         // DOM elements
         this.elements = {
             playButton: document.getElementById('playButton'),
-            stopButton: document.getElementById('stopButton'),
-            progressFill: document.getElementById('progressFill'),
-            currentTime: document.getElementById('currentTime'),
-            totalTime: document.getElementById('totalTime'),
-            fileName: document.getElementById('fileName'),
-            duration: document.getElementById('duration'),
-            sampleRate: document.getElementById('sampleRate')
+            stopButton: document.getElementById('stopButton')
         };
         
         // State
@@ -99,9 +93,7 @@ class AmbisonicAudioApp {
             console.log('loadDefaultAudio: Setting audioLoaded to true');
             
             // Update UI
-            console.log('loadDefaultAudio: Updating UI...');
-            this.elements.duration.textContent = this.formatTime(audioInfo.duration);
-            this.elements.sampleRate.textContent = `${audioInfo.sampleRate} Hz`;
+            console.log('loadDefaultAudio: UI updated');
             
             // Enable controls
             console.log('loadDefaultAudio: Enabling controls...');
@@ -204,7 +196,6 @@ class AmbisonicAudioApp {
         this.audioEngine.stop();
         this.elements.playButton.innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">Play</span>';
         this.elements.playButton.classList.remove('playing');
-        this.updateProgress(0, this.audioEngine.getDuration());
     }
     
     updateOrientation(azimuth, elevation, roll) {
@@ -213,10 +204,7 @@ class AmbisonicAudioApp {
     }
     
     updateProgress(currentTime, duration) {
-        const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-        this.elements.progressFill.style.width = `${progress}%`;
-        this.elements.currentTime.textContent = this.formatTime(currentTime);
-        this.elements.totalTime.textContent = this.formatTime(duration);
+        // Progress tracking removed for simplified interface
     }
     
     handlePlaybackEnded() {
