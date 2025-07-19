@@ -175,6 +175,9 @@ class OrientationHandler {
         if (this.onOrientationChange) {
             this.onOrientationChange(this.azimuth, this.elevation, this.roll);
         }
+        if (typeof window.setModelRotation === 'function') {
+            window.setModelRotation(this.azimuth, this.elevation, this.roll);
+        }
     }
     
     calibrate() {

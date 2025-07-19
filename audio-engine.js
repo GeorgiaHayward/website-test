@@ -30,21 +30,27 @@ class AmbisonicAudioEngine {
     
     async initializeAudioContext() {
         try {
+            console.log('AudioEngine: Initializing audio context...');
+            
             // Create audio context with optimal settings
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
                 sampleRate: 48000,
                 latencyHint: 'interactive'
             });
             
+            console.log('AudioEngine: Audio context created, state:', this.audioContext.state);
+            
             // Resume context if suspended (required for mobile)
             if (this.audioContext.state === 'suspended') {
+                console.log('AudioEngine: Resuming suspended audio context...');
                 await this.audioContext.resume();
+                console.log('AudioEngine: Audio context resumed, new state:', this.audioContext.state);
             }
             
             this.setupAudioNodes();
-            console.log('Audio context initialized successfully');
+            console.log('AudioEngine: Audio context initialized successfully');
         } catch (error) {
-            console.error('Failed to initialize audio context:', error);
+            console.error('AudioEngine: Failed to initialize audio context:', error);
             throw error;
         }
     }
@@ -92,6 +98,120 @@ class AmbisonicAudioEngine {
         this.gainNode.connect(this.analyser);
         this.analyser.connect(this.pannerNode);
         this.pannerNode.connect(this.audioContext.destination);
+    }
+    
+    async createTestTone() {
+        try {
+            // Resume context if needed
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            
+            console.log('Attempting to load Ambisonic Audio.flac...');
+            
+            // Load the specific ambisonic audio file with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for large file
+            
+            console.log('Starting fetch with 60 second timeout...');
+            
+            let response;
+            try {
+                response = await fetch('Ambisonic%20Audio.flac', {
+                    signal: controller.signal
+                });
+            } catch (fetchError) {
+                console.error('Fetch error:', fetchError);
+                throw new Error(`Fetch failed: ${fetchError.message}`);
+            }
+            
+            clearTimeout(timeoutId);
+            console.log('Fetch response status:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to load audio file: ${response.status} ${response.statusText}`);
+            }
+            
+            console.log('Audio file fetched successfully, decoding...');
+            const arrayBuffer = await response.arrayBuffer();
+            console.log('Array buffer size:', arrayBuffer.byteLength, 'bytes');
+            
+            console.log('Starting audio decoding...');
+            this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            this.duration = this.audioBuffer.duration;
+            
+            console.log(`Audio loaded: ${this.audioBuffer.numberOfChannels} channels, ${this.audioBuffer.sampleRate}Hz, ${this.duration.toFixed(2)}s`);
+            
+            // Set up ambisonic processing
+            this.setupAmbisonicDecoding();
+            
+            return {
+                duration: this.duration,
+                sampleRate: this.audioBuffer.sampleRate,
+                channels: this.audioBuffer.numberOfChannels
+            };
+        } catch (error) {
+            console.error('Failed to load ambisonic audio file:', error);
+            
+            // Fallback: Create a test tone if the file loading fails
+            console.log('Creating fallback test tone...');
+            return this.createFallbackTestTone();
+        }
+    }
+    
+    createFallbackTestTone() {
+        try {
+            console.log('Creating fallback test tone...');
+            
+            // Create a 10-second ambisonic test tone
+            const duration = 10;
+            const sampleRate = this.audioContext.sampleRate;
+            const length = duration * sampleRate;
+            
+            // Create a 4-channel ambisonic buffer (B-format: W, X, Y, Z)
+            this.audioBuffer = this.audioContext.createBuffer(4, length, sampleRate);
+            this.duration = duration;
+            
+            // Generate test tones for each channel
+            for (let channel = 0; channel < 4; channel++) {
+                const channelData = this.audioBuffer.getChannelData(channel);
+                
+                // Different frequencies for each channel to create spatial separation
+                const frequencies = [440, 880, 1320, 1760]; // A4, A5, E6, A6
+                const frequency = frequencies[channel];
+                
+                for (let i = 0; i < length; i++) {
+                    const time = i / sampleRate;
+                    const amplitude = 0.3; // Reduced amplitude for safety
+                    
+                    // Create a tone with some variation
+                    const tone = amplitude * Math.sin(2 * Math.PI * frequency * time);
+                    
+                    // Add some harmonics for richer sound
+                    const harmonic1 = 0.1 * Math.sin(2 * Math.PI * frequency * 2 * time);
+                    const harmonic2 = 0.05 * Math.sin(2 * Math.PI * frequency * 3 * time);
+                    
+                    // Add some spatial movement
+                    const spatialMod = 0.1 * Math.sin(2 * Math.PI * 0.5 * time);
+                    
+                    channelData[i] = tone + harmonic1 + harmonic2 + spatialMod;
+                }
+            }
+            
+            console.log(`Fallback test tone created: ${this.audioBuffer.numberOfChannels} channels, ${sampleRate}Hz, ${duration.toFixed(2)}s`);
+            
+            // Set up ambisonic processing
+            this.setupAmbisonicDecoding();
+            
+            return {
+                duration: this.duration,
+                sampleRate: sampleRate,
+                channels: this.audioBuffer.numberOfChannels
+            };
+        } catch (error) {
+            console.error('Failed to create fallback test tone:', error);
+            throw error;
+        }
     }
     
     async loadAudioFile(file) {
@@ -201,87 +321,103 @@ class AmbisonicAudioEngine {
         } else {
             // Fallback for older browsers
             this.audioContext.listener.setOrientation(
-                Math.sin(azRad), Math.sin(elRad), -Math.cos(azRad) * Math.cos(elRad),
-                Math.sin(roll * Math.PI / 180), Math.cos(roll * Math.PI / 180), 0
+                Math.sin(azRad),
+                Math.sin(elRad),
+                -Math.cos(azRad) * Math.cos(elRad),
+                Math.sin(roll * Math.PI / 180),
+                Math.cos(roll * Math.PI / 180),
+                0
             );
         }
     }
     
     async play() {
         if (!this.audioBuffer) {
-            throw new Error('No audio buffer loaded');
+            throw new Error('No audio loaded');
         }
         
-        if (this.isPlaying) {
-            return;
-        }
-        
-        // Resume context if needed
-        if (this.audioContext.state === 'suspended') {
-            await this.audioContext.resume();
-        }
-        
-        // Create new source
-        this.source = this.audioContext.createBufferSource();
-        this.source.buffer = this.audioBuffer;
-        this.source.loop = false;
-        
-        // Connect source to processing chain
-        this.source.connect(this.gainNode);
-        
-        // Set up ended callback
-        this.source.onended = () => {
-            this.isPlaying = false;
-            this.startTime = 0;
-            this.pauseTime = 0;
-            if (this.onEnded) {
-                this.onEnded();
+        try {
+            // Resume context if needed
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
             }
-        };
-        
-        // Start playback
-        const offset = this.pauseTime;
-        this.source.start(0, offset);
-        this.startTime = this.audioContext.currentTime - offset;
-        this.isPlaying = true;
-        
-        // Start time updates
-        this.startTimeUpdates();
+            
+            // Stop any existing playback
+            if (this.source) {
+                this.source.stop();
+            }
+            
+            // Create new source
+            this.source = this.audioContext.createBufferSource();
+            this.source.buffer = this.audioBuffer;
+            
+            // Connect source to gain node
+            this.source.connect(this.gainNode);
+            
+            // Set up ended callback
+            this.source.onended = () => {
+                this.isPlaying = false;
+                if (this.onEnded) {
+                    this.onEnded();
+                }
+            };
+            
+            // Calculate start time
+            const now = this.audioContext.currentTime;
+            const startTime = this.pauseTime > 0 ? now - this.pauseTime : now;
+            
+            // Start playback
+            this.source.start(0, this.pauseTime > 0 ? this.pauseTime : 0);
+            this.isPlaying = true;
+            this.startTime = startTime;
+            
+            // Start time updates
+            this.startTimeUpdates();
+            
+            console.log('Playback started');
+            
+        } catch (error) {
+            console.error('Failed to start playback:', error);
+            throw error;
+        }
     }
     
     stop() {
-        if (this.source && this.isPlaying) {
+        if (this.source) {
             this.source.stop();
             this.source = null;
-            this.isPlaying = false;
-            this.startTime = 0;
-            this.pauseTime = 0;
-            this.stopTimeUpdates();
+        }
+        this.isPlaying = false;
+        this.pauseTime = 0;
+        this.stopTimeUpdates();
+        
+        // Reset progress
+        if (this.onTimeUpdate) {
+            this.onTimeUpdate(0, this.duration);
         }
     }
     
     pause() {
         if (this.source && this.isPlaying) {
-            this.pauseTime = this.audioContext.currentTime - this.startTime;
             this.source.stop();
             this.source = null;
             this.isPlaying = false;
+            this.pauseTime = this.getCurrentTime();
             this.stopTimeUpdates();
         }
     }
     
     setVolume(volume) {
         if (this.gainNode) {
-            // Use exponential scaling for more natural volume control
-            this.gainNode.gain.value = volume * volume;
+            this.gainNode.gain.value = Math.max(0, Math.min(1, volume));
         }
     }
     
     getCurrentTime() {
-        if (this.isPlaying) {
-            return this.audioContext.currentTime - this.startTime;
+        if (!this.isPlaying || !this.source) {
+            return this.pauseTime;
         }
-        return this.pauseTime;
+        return this.audioContext.currentTime - this.startTime;
     }
     
     getDuration() {
@@ -291,17 +427,17 @@ class AmbisonicAudioEngine {
     getAnalyserData() {
         if (!this.analyser) return null;
         
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
+        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
         this.analyser.getByteFrequencyData(dataArray);
-        
         return dataArray;
     }
     
     startTimeUpdates() {
+        this.stopTimeUpdates();
         this.timeUpdateInterval = setInterval(() => {
-            if (this.onTimeUpdate && this.isPlaying) {
-                this.onTimeUpdate(this.getCurrentTime(), this.duration);
+            if (this.isPlaying && this.onTimeUpdate) {
+                const currentTime = this.getCurrentTime();
+                this.onTimeUpdate(currentTime, this.duration);
             }
         }, 100);
     }
@@ -313,18 +449,15 @@ class AmbisonicAudioEngine {
         }
     }
     
-    // Utility methods
     formatTime(seconds) {
+        if (isNaN(seconds)) return '0:00';
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
     
-    // Cleanup
     dispose() {
         this.stop();
-        this.stopTimeUpdates();
-        
         if (this.audioContext) {
             this.audioContext.close();
         }

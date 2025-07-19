@@ -1,171 +1,132 @@
-# 🎧 Ambisonic Audio Player
+# Ambisonic Audio Player
 
-A modern web application for playing ambisonic audio files with device orientation control for immersive spatial audio experiences.
+A web-based ambisonic audio player that provides spatial audio experience with device orientation control.
 
-## ✨ Features
+## Features
 
-- **🎵 Ambisonic Audio Playback**: Supports WAV, MP3, and OGG ambisonic audio files
-- **📱 Device Orientation Control**: Use your mobile device's sensors to navigate the 3D soundfield
-- **🎛️ Manual Controls**: Manual azimuth and elevation sliders for desktop use
-- **📊 Real-time Visualization**: Audio spectrum analyzer and spatial audio visualization
-- **🎨 Modern UI**: Beautiful, responsive design with smooth animations
-- **🌙 Dark Mode**: Automatic dark mode support based on system preferences
-- **📱 Mobile-First**: Optimized for mobile devices with touch controls
+- **Ambisonic Audio File**: Loads and plays your "Ambisonic Audio.WAV" file automatically
+- **Device Orientation Control**: Use your phone or tablet's orientation sensors to control spatial audio
+- **Manual Controls**: Sliders for azimuth and elevation when device orientation is not available
+- **Real-time Visualizer**: Audio frequency visualization
+- **Volume Control**: Adjustable volume with percentage display
+- **Progress Tracking**: Shows current time and total duration
 
-## 🚀 Getting Started
+## How to Use
 
-### GitHub Pages Deployment
+1. **Add Your Audio File**: Place your "Ambisonic Audio.WAV" file in the project directory
+2. **Start the Server**: Run `python3 -m http.server 8000` in the project directory
+3. **Open in Browser**: Navigate to `http://localhost:8000`
+4. **Click Play**: Your ambisonic audio file will start playing immediately
+5. **Enable Orientation**: Click "Enable Orientation" to use device sensors (works best on mobile)
+6. **Manual Control**: Use the sliders to manually control spatial position
+7. **Adjust Volume**: Use the volume slider to control audio level
 
-This app is designed to work perfectly with GitHub Pages:
+## Technical Details
 
-1. **Fork or clone this repository**
-2. **Enable GitHub Pages** in your repository settings
-3. **Select source**: Deploy from main branch
-4. **Access your app**: `https://yourusername.github.io/your-repo-name`
+- **Audio File**: "Ambisonic Audio.WAV" (your file)
+- **Format Support**: WAV ambisonic files (B-format recommended)
+- **Spatial Processing**: HRTF-based 3D audio rendering
+- **Browser Support**: Modern browsers with Web Audio API support
 
-### Local Development
+## Mobile Experience
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/ambisonic-audio-player.git
-   cd ambisonic-audio-player
-   ```
+For the best experience:
+- Use a mobile device with orientation sensors
+- Enable device orientation permissions when prompted
+- Tilt your device to move around in the 3D soundfield
+- Use headphones for better spatial audio perception
 
-2. **Serve locally** (required for Web Audio API):
-   ```bash
-   # Using Python
-   python -m http.server 8000
-   
-   # Using Node.js
-   npx http-server
-   
-   # Using any other static file server
-   ```
+## Browser Compatibility
 
-3. **Open in browser**: Navigate to `http://localhost:8000`
+- Chrome/Edge (recommended)
+- Firefox
+- Safari (limited orientation support)
+- Mobile browsers with Web Audio API support
 
-## 🎯 How to Use
+## File Structure
 
-### 1. Load Audio File
-- Click "Choose Ambisonic Audio File" or drag & drop a file
-- Supports WAV, MP3, and OGG formats
-- Best results with 4+ channel ambisonic files (B-format)
+```
+website-test/
+├── index.html          # Main HTML interface
+├── app.js             # Main application logic
+├── audio-engine.js    # Audio processing and ambisonic decoding
+├── orientation-handler.js # Device orientation handling
+├── visualizer.js      # Audio visualization
+├── styles.css         # Styling
+└── Ambisonic Audio.WAV # Your ambisonic audio file
+```
 
-### 2. Control Playback
-- **Play/Pause**: Start or pause audio playback
-- **Stop**: Stop playback and reset to beginning
-- **Volume**: Adjust playback volume with the slider
+## Development
 
-### 3. Spatial Audio Control
-
-#### Device Orientation (Mobile)
-- Click "Enable Orientation" to activate device sensors
-- Grant permission when prompted (required on iOS 13+)
-- Tilt and rotate your device to move around in the soundfield:
-  - **Rotate left/right**: Changes azimuth (horizontal direction)
-  - **Tilt up/down**: Changes elevation (vertical direction)
-  - **Roll**: Additional spatial dimension
-
-#### Manual Controls (Desktop/Mobile)
-- Use the azimuth slider to control left/right positioning
-- Use the elevation slider to control up/down positioning
-- Works alongside or instead of device orientation
-
-### 4. Visualization
-- **Frequency Spectrum**: Real-time audio frequency analysis
-- **Spatial Visualization**: Shows listener position and sound source
-- **Orientation Indicator**: Compass showing current heading
-
-## 🛠️ Technical Details
-
-### Web Audio API
-- Uses modern Web Audio API for spatial audio processing
-- HRTF-based 3D panner for realistic spatial audio
-- Support for ambisonic audio decoding (simplified implementation)
-
-### Device Orientation
-- Supports both iOS and Android devices
-- Handles permission requests for iOS 13+
-- Smooth interpolation and calibration features
-
-### Browser Compatibility
-- **Chrome/Edge**: Full support
-- **Firefox**: Full support
-- **Safari**: Full support (iOS 13+ requires permission)
-- **Mobile browsers**: Optimized for mobile use
-
-### File Format Support
-- **WAV**: Best for high-quality ambisonic content
-- **MP3**: Good compression with spatial audio support
-- **OGG**: Alternative compressed format
-
-## 📱 Mobile Usage Tips
-
-1. **Use headphones** for the best spatial audio experience
-2. **Enable orientation** for immersive control
-3. **Calibrate** by pointing device forward when starting
-4. **Hold device** in landscape mode for better control
-5. **Grant permissions** when prompted for orientation access
-
-## 🎨 Customization
-
-The app is built with modular CSS and JavaScript, making it easy to customize:
-
-- **Colors**: Modify the gradient colors in `styles.css`
-- **Layout**: Adjust the responsive grid layout
-- **Visualization**: Customize the audio visualizer settings
-- **Controls**: Add or modify audio controls
-
-## 🔧 Advanced Features
-
-### Ambisonic Processing
-- Automatic detection of multichannel ambisonic files
-- Basic ambisonic rotation matrix implementation
-- Extensible for advanced ambisonic libraries
-
-### Spatial Audio
-- 3D HRTF processing for realistic spatial audio
-- Distance modeling and rolloff
-- Listener orientation tracking
-
-### Performance
-- Optimized for mobile devices
-- Efficient canvas rendering
-- Smooth 60fps visualization
-
-## 🐛 Troubleshooting
-
-### Audio Won't Play
-- Ensure the audio file is valid and supported
-- Check browser audio permissions
-- Try clicking play after user interaction (autoplay restrictions)
-
-### Orientation Not Working
-- Check device orientation sensor support
-- Grant permission when prompted (iOS)
-- Try calibrating the orientation
-- Ensure HTTPS connection (required for sensors)
-
-### Performance Issues
-- Close other browser tabs
-- Reduce visualization complexity
-- Check device performance capabilities
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
-
-## 🙏 Acknowledgments
-
-- Web Audio API for spatial audio processing
-- Device Orientation API for motion control
+The application is built with vanilla JavaScript and uses:
+- Web Audio API for audio processing
+- Device Orientation API for sensor input
 - Canvas API for visualization
-- Modern CSS features for beautiful UI
+- Modern CSS for responsive design
+
+## Troubleshooting
+
+- **No Audio**: Ensure your browser supports Web Audio API and check volume settings
+- **File Not Found**: Make sure "Ambisonic Audio.WAV" is in the same directory as index.html
+- **Orientation Not Working**: Check device permissions and browser compatibility
+- **Performance Issues**: Close other tabs and applications to free up resources 
 
 ---
 
-**Built with ❤️ for spatial audio enthusiasts** 
+## 1. **Create a GitHub Repository**
+
+1. Go to [github.com](https://github.com/) and log in.
+2. Click the "+" in the top right and select **New repository**.
+3. Name your repo (e.g., `sound-room`), set it to **Public**, and click **Create repository**.
+
+---
+
+## 2. **Push Your Project to GitHub**
+
+If your project isn’t already a git repo, run these commands in your project folder:
+
+```sh
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/sound-room.git
+git push -u origin main
+```
+Replace `YOUR_USERNAME` and `sound-room` with your actual GitHub username and repo name.
+
+---
+
+## 3. **Enable GitHub Pages**
+
+1. Go to your repo on GitHub.
+2. Click **Settings** > **Pages** (in the left sidebar).
+3. Under **Source**, select the `main` branch and `/ (root)` folder.
+4. Click **Save**.
+
+GitHub will give you a URL like:  
+`https://YOUR_USERNAME.github.io/sound-room/`
+
+---
+
+## 4. **Access Your Site**
+
+- Wait a minute or two for the site to build.
+- Visit the URL provided by GitHub Pages.
+
+---
+
+## 5. **(Optional) Update URLs for Audio/Assets**
+
+If you use absolute paths (like `/Ambisonic Audio.flac`), change them to relative paths (`Ambisonic Audio.flac`) for GitHub Pages compatibility.
+
+---
+
+## 6. **(Optional) Add a .nojekyll File**
+
+If you have files/folders that start with an underscore, add an empty file named `.nojekyll` to your repo root to prevent GitHub Pages from ignoring them.
+
+---
+
+**Let me know if you want a ready-to-copy `.gitignore` or help with any of these steps!**  
+Once you’ve pushed and enabled Pages, send me your link and I can help you check it! 

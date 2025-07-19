@@ -1,0 +1,53 @@
+:root {
+  /* Colors */
+  --color-background: #FFFFFF;
+  --color-foreground: #000000;
+  --color-primary: #000000;
+  --color-secondary: #FFFFFF;
+  --color-border: #000000;
+  --color-card-background: #FFFFFF;
+  --color-card-border: #000000;
+
+  /* Typography */
+  --font-family: 'Poppins', 'Arial', sans-serif;
+  --heading-font-weight: bold;
+  --heading-text-transform: uppercase;
+  --heading-font-size-h1: 2rem;
+  --heading-font-size-h2: 1.5rem;
+  --heading-font-size-h3: 1.2rem;
+  --heading-letter-spacing: 0.05em;
+  --body-font-weight: normal;
+  --body-font-size: 1rem;
+  --body-text-transform: none;
+  --nav-font-weight: bold;
+  --nav-text-transform: uppercase;
+  --nav-font-size: 1.1rem;
+
+  /* Layout */
+  --container-padding: 1.5rem;
+  --section-spacing: 2rem;
+  --card-border-radius: 1rem;
+  --card-border-width: 2px;
+  --card-border-style: solid;
+  --card-border-color: #000000;
+  --card-padding: 1rem;
+  --card-margin: 1rem 0;
+  --grid-columns: 2;
+  --grid-gap: 1rem;
+
+  /* Icons */
+  /* Use icon font or SVGs for arrow/home icons as described in the design system */
+
+  /* Buttons */
+  --button-background: #FFFFFF;
+  --button-color: #000000;
+  --button-border: 2px solid #000000;
+  --button-border-radius: 1rem;
+  --button-padding: 0.75rem 1.5rem;
+  --button-font-weight: bold;
+  --button-text-transform: uppercase;
+
+  /* Effects */
+  --effect-shadow: none;
+  --effect-hover-background: #F0F0F0;
+} 

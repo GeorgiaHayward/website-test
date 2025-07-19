@@ -7,11 +7,8 @@ class AmbisonicAudioApp {
         
         // DOM elements
         this.elements = {
-            audioFile: document.getElementById('audioFile'),
             playButton: document.getElementById('playButton'),
             stopButton: document.getElementById('stopButton'),
-            volumeSlider: document.getElementById('volumeSlider'),
-            volumeValue: document.getElementById('volumeValue'),
             progressFill: document.getElementById('progressFill'),
             currentTime: document.getElementById('currentTime'),
             totalTime: document.getElementById('totalTime'),
@@ -33,29 +30,55 @@ class AmbisonicAudioApp {
         
         // State
         this.isOrientationEnabled = false;
-        this.currentFile = null;
+        this.audioLoaded = false;
+        this.isLoading = false;
+        this.hasUserInteracted = false;
         
         this.init();
     }
     
     async init() {
         try {
-            // Initialize audio engine
+            console.log('Starting app initialization...');
+            
+            // Initialize audio engine (but do not load audio yet)
+            console.log('Initializing audio engine...');
             this.audioEngine = new AmbisonicAudioEngine();
             
             // Initialize orientation handler
+            console.log('Initializing orientation handler...');
             this.orientationHandler = new OrientationHandler();
             
-            // Initialize visualizer
-            this.visualizer = new AudioVisualizer('visualizer');
-            this.visualizer.setAudioEngine(this.audioEngine);
-            this.visualizer.setOrientationHandler(this.orientationHandler);
+            // Try to enable orientation, but do not fail if not possible
+            try {
+                await this.orientationHandler.enable();
+                this.isOrientationEnabled = true;
+                console.log('Device orientation enabled automatically.');
+            } catch (err) {
+                this.isOrientationEnabled = false;
+                console.warn('Device orientation could not be enabled automatically:', err);
+            }
+            
+            // Initialize visualizer (if present)
+            if (document.getElementById('visualizer')) {
+                console.log('Initializing visualizer...');
+                this.visualizer = new AudioVisualizer('visualizer');
+                this.visualizer.setAudioEngine(this.audioEngine);
+                this.visualizer.setOrientationHandler(this.orientationHandler);
+            }
             
             // Set up event listeners
+            console.log('Setting up event listeners...');
             this.setupEventListeners();
             
             // Set up callbacks
+            console.log('Setting up callbacks...');
             this.setupCallbacks();
+            
+            // Do NOT load audio here!
+            // Only load after user clicks Play
+            this.elements.playButton.disabled = false;
+            this.elements.playButton.innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">Play</span>';
             
             console.log('Ambisonic Audio App initialized successfully');
             
@@ -65,12 +88,55 @@ class AmbisonicAudioApp {
         }
     }
     
+    async loadDefaultAudio() {
+        try {
+            console.log('loadDefaultAudio: Starting...');
+            this.isLoading = true;
+            this.elements.playButton.disabled = true;
+            this.elements.playButton.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Loading...</span>';
+            
+            this.showLoading('Loading ambisonic audio file...');
+            
+            // Load the actual ambisonic audio file
+            console.log('loadDefaultAudio: Calling audioEngine.createTestTone()...');
+            const audioInfo = await this.audioEngine.createTestTone();
+            console.log('loadDefaultAudio: Audio loaded successfully:', audioInfo);
+            
+            this.audioLoaded = true;
+            this.isLoading = false;
+            console.log('loadDefaultAudio: Setting audioLoaded to true');
+            
+            // Update UI
+            console.log('loadDefaultAudio: Updating UI...');
+            this.elements.duration.textContent = this.formatTime(audioInfo.duration);
+            this.elements.sampleRate.textContent = `${audioInfo.sampleRate} Hz`;
+            
+            // Enable controls
+            console.log('loadDefaultAudio: Enabling controls...');
+            this.elements.playButton.disabled = false;
+            this.elements.playButton.innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">Play</span>';
+            this.elements.stopButton.disabled = false;
+            
+            // Start visualizer
+            console.log('loadDefaultAudio: Starting visualizer...');
+            this.visualizer.start();
+            
+            this.hideLoading();
+            console.log('loadDefaultAudio: Complete!');
+            
+            console.log('Ambisonic audio file loaded successfully:', audioInfo);
+            
+        } catch (error) {
+            console.error('loadDefaultAudio: Failed to load ambisonic audio file:', error);
+            this.isLoading = false;
+            this.elements.playButton.disabled = false;
+            this.elements.playButton.innerHTML = '<span class="btn-icon">▶️</span><span class="btn-text">Play</span>';
+            this.showError(`Failed to load audio file: ${error.message}. Please ensure "Ambisonic Audio.flac" is in the same directory and refresh the page.`);
+            this.hideLoading();
+        }
+    }
+    
     setupEventListeners() {
-        // File input
-        this.elements.audioFile.addEventListener('change', (e) => {
-            this.handleFileSelect(e.target.files[0]);
-        });
-        
         // Audio controls
         this.elements.playButton.addEventListener('click', () => {
             this.togglePlayback();
@@ -80,38 +146,9 @@ class AmbisonicAudioApp {
             this.stopPlayback();
         });
         
-        // Volume control
-        this.elements.volumeSlider.addEventListener('input', (e) => {
-            this.setVolume(parseFloat(e.target.value));
-        });
-        
-        // Orientation control
-        this.elements.enableOrientation.addEventListener('click', () => {
-            this.toggleOrientation();
-        });
-        
-        // Manual orientation controls
-        this.elements.azimuthSlider.addEventListener('input', (e) => {
-            this.setManualOrientation();
-        });
-        
-        this.elements.elevationSlider.addEventListener('input', (e) => {
-            this.setManualOrientation();
-        });
-        
         // Window resize
         window.addEventListener('resize', () => {
             this.visualizer.resize();
-        });
-        
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            document.addEventListener(eventName, this.preventDefaults, false);
-        });
-        
-        // Drop zone
-        document.addEventListener('drop', (e) => {
-            this.handleDrop(e);
         });
     }
     
@@ -135,41 +172,26 @@ class AmbisonicAudioApp {
         };
     }
     
-    async handleFileSelect(file) {
-        if (!file) return;
-        
-        try {
-            this.showLoading('Loading audio file...');
-            
-            // Load audio file
-            const audioInfo = await this.audioEngine.loadAudioFile(file);
-            this.currentFile = file;
-            
-            // Update UI
-            this.elements.fileName.textContent = file.name;
-            this.elements.duration.textContent = this.formatTime(audioInfo.duration);
-            this.elements.sampleRate.textContent = `${audioInfo.sampleRate} Hz`;
-            this.elements.audioInfo.style.display = 'block';
-            
-            // Enable controls
-            this.elements.playButton.disabled = false;
-            this.elements.stopButton.disabled = false;
-            
-            // Start visualizer
-            this.visualizer.start();
-            
-            this.hideLoading();
-            
-            console.log('Audio file loaded successfully:', audioInfo);
-            
-        } catch (error) {
-            console.error('Failed to load audio file:', error);
-            this.showError('Failed to load audio file. Please ensure it\'s a valid audio file.');
-            this.hideLoading();
-        }
-    }
-    
     async togglePlayback() {
+        if (this.isLoading) {
+            this.showError('Audio is still loading. Please wait...');
+            return;
+        }
+        
+        if (!this.audioLoaded) {
+            // First user gesture: load and play audio
+            if (!this.hasUserInteracted) {
+                this.hasUserInteracted = true;
+                await this.loadDefaultAudio();
+                // After loading, auto-play
+                await this.togglePlayback();
+                return;
+            } else {
+                this.showError('Audio not loaded yet. Please wait...');
+                return;
+            }
+        }
+        
         try {
             if (this.audioEngine.isPlaying) {
                 this.audioEngine.pause();
@@ -193,58 +215,12 @@ class AmbisonicAudioApp {
         this.updateProgress(0, this.audioEngine.getDuration());
     }
     
-    setVolume(volume) {
-        this.audioEngine.setVolume(volume);
-        this.elements.volumeValue.textContent = `${Math.round(volume * 100)}%`;
-    }
-    
-    async toggleOrientation() {
-        try {
-            if (this.isOrientationEnabled) {
-                this.orientationHandler.disable();
-                this.isOrientationEnabled = false;
-                this.elements.enableOrientation.innerHTML = '<span class="btn-icon">📱</span><span class="btn-text">Enable Orientation</span>';
-                this.elements.orientationData.style.display = 'none';
-                this.updateOrientationStatus(false);
-            } else {
-                await this.orientationHandler.enable();
-                this.isOrientationEnabled = true;
-                this.elements.enableOrientation.innerHTML = '<span class="btn-icon">🧭</span><span class="btn-text">Disable Orientation</span>';
-                this.elements.orientationData.style.display = 'block';
-                this.updateOrientationStatus(true);
-            }
-        } catch (error) {
-            console.error('Orientation error:', error);
-            this.showError('Failed to enable device orientation. Please check your device and browser settings.');
-        }
-    }
-    
-    setManualOrientation() {
-        const azimuth = parseFloat(this.elements.azimuthSlider.value);
-        const elevation = parseFloat(this.elements.elevationSlider.value);
-        
-        this.elements.azimuthValue.textContent = `${azimuth}°`;
-        this.elements.elevationValue.textContent = `${elevation}°`;
-        
-        // Update audio engine
-        this.audioEngine.updateSpatialPosition(azimuth, elevation, 0);
-        
-        // Update orientation display
-        this.updateOrientationDisplay(azimuth, elevation, 0);
-    }
-    
     updateOrientation(azimuth, elevation, roll) {
         // Update audio engine
         this.audioEngine.updateSpatialPosition(azimuth, elevation, roll);
         
         // Update UI
         this.updateOrientationDisplay(azimuth, elevation, roll);
-        
-        // Update manual sliders to reflect device orientation
-        this.elements.azimuthSlider.value = azimuth;
-        this.elements.elevationSlider.value = elevation;
-        this.elements.azimuthValue.textContent = `${azimuth.toFixed(1)}°`;
-        this.elements.elevationValue.textContent = `${elevation.toFixed(1)}°`;
     }
     
     updateOrientationDisplay(azimuth, elevation, roll) {
@@ -254,28 +230,19 @@ class AmbisonicAudioApp {
     }
     
     updateOrientationStatus(isEnabled) {
-        const status = this.orientationHandler.getStatus();
-        let statusText = 'Orientation: ';
-        
-        if (!status.supported) {
-            statusText += 'Not Supported';
-        } else if (!status.hasPermission) {
-            statusText += 'Permission Denied';
-        } else if (isEnabled) {
-            statusText += 'Active';
+        const statusElement = this.elements.orientationStatus.querySelector('.status-text');
+        if (isEnabled) {
+            statusElement.textContent = 'Orientation: Enabled';
+            statusElement.style.color = '#4CAF50';
         } else {
-            statusText += 'Disabled';
+            statusElement.textContent = 'Orientation: Disabled';
+            statusElement.style.color = '#f44336';
         }
-        
-        this.elements.orientationStatus.querySelector('.status-text').textContent = statusText;
     }
     
     updateProgress(currentTime, duration) {
-        if (duration > 0) {
-            const progress = (currentTime / duration) * 100;
-            this.elements.progressFill.style.width = `${progress}%`;
-        }
-        
+        const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+        this.elements.progressFill.style.width = `${progress}%`;
         this.elements.currentTime.textContent = this.formatTime(currentTime);
         this.elements.totalTime.textContent = this.formatTime(duration);
     }
@@ -286,59 +253,31 @@ class AmbisonicAudioApp {
         this.updateProgress(0, this.audioEngine.getDuration());
     }
     
-    handleDrop(e) {
-        e.preventDefault();
-        const files = e.dataTransfer.files;
-        
-        if (files.length > 0) {
-            this.handleFileSelect(files[0]);
-        }
-    }
-    
-    preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    
     showLoading(message) {
-        // Simple loading implementation
-        console.log('Loading:', message);
+        // Simple loading indicator
+        console.log(message);
     }
     
     hideLoading() {
+        // Hide loading indicator
         console.log('Loading complete');
     }
     
     showError(message) {
-        console.error('Error:', message);
-        alert(message); // Simple error display - could be enhanced with better UI
+        // Simple error display
+        console.error(message);
+        alert(message);
     }
     
     formatTime(seconds) {
+        if (isNaN(seconds)) return '0:00';
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 }
 
-// Initialize the app when DOM is loaded
+// Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new AmbisonicAudioApp();
-});
-
-// Handle page visibility changes
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        // Pause audio when page is hidden (optional)
-        // window.app?.audioEngine?.pause();
-    }
-});
-
-// Handle page unload
-window.addEventListener('beforeunload', () => {
-    if (window.app) {
-        window.app.audioEngine.dispose();
-        window.app.orientationHandler.disable();
-        window.app.visualizer.stop();
-    }
+    new AmbisonicAudioApp();
 });
